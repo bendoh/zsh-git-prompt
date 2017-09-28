@@ -73,7 +73,11 @@ When the branch name starts with a colon `:`, it means it’s actually a hash, n
     PROMPT='%B%m%~%b$(cached_git_super_status) %# '
     ```
 3.  Go in a git repository and test it!
-4.  As a cleanup step, add to your `~/.zlogout` file, the following: rm -f "$PROMPTCACHE/prompt.$$" "$PROMPTCACHE/pid.$$". This will ensure that files in the `$PROMPTCACHE` don't accumulate forever.
+4.  As a cleanup step, add to your `~/.zlogout` file, the following:
+    ```sh
+    rm -f "$PROMPTCACHE/prompt.$$" "$PROMPTCACHE/pid.$$".
+    ```
+    This will ensure that files in the `$PROMPTCACHE` don't accumulate forever.
 
 ### Haskell (optional)
 
