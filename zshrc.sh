@@ -26,7 +26,7 @@ function TRAPUSR2 {
   rm $PROMPTCACHE/pid.$$
 }
 
-function cached_status {
+function cached_git_super_status {
   [ -f $PROMPTCACHE/prompt.$$ ] && cat $PROMPTCACHE/prompt.$$
 }
 

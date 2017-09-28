@@ -4,7 +4,7 @@
 
 A `zsh` prompt that displays information about the current git repository. In particular the branch name, difference with remote branch, number of files staged, changed, etc.
 
-(an original idea from this [blog post][]).
+Further extended to asynchronize the git status process, so that the shell prompt is not blocked while parsing the git environment, with ideas derived from [this stackoverflow question about asynchronous prompts.](https://unix.stackexchange.com/questions/91087/asynchronous-rprompt).
 
 ## Examples
 
@@ -65,10 +65,15 @@ When the branch name starts with a colon `:`, it means it’s actually a hash, n
 
     ```sh
     source path/to/zshrc.sh
-    # an example prompt
-    PROMPT='%B%m%~%b$(git_super_status) %# '
+
+    # Initialize the cached prompt environment
+    init_async_git_super_status
+
+    # An example prompt
+    PROMPT='%B%m%~%b$(cached_git_super_status) %# '
     ```
 3.  Go in a git repository and test it!
+4.  As a cleanup step, add to your `~/.zlogout` file, the following: rm -f "$PROMPTCACHE/prompt.$$" "$PROMPTCACHE/pid.$$". This will ensure that files in the `$PROMPTCACHE` don't accumulate forever.
 
 ### Haskell (optional)
 
@@ -81,11 +86,10 @@ There is now a Haskell implementation as well, which can be four to six times fa
 4.  Define the variable `GIT_PROMPT_EXECUTABLE="haskell"` somewhere in
     your `.zshrc`
 
-## Customisation
+## Customization
 
-- You may redefine the function `git_super_status` (after the `source` statement) to adapt it to your needs (to change the order in which the information is displayed).
-- Define the variable `ZSH_THEME_GIT_PROMPT_CACHE` in order to enable caching.
-- You may also change a number of variables (which name start with `ZSH_THEME_GIT_PROMPT_`) to change the appearance of the prompt.  Take a look in the file `zshrc.sh` to see how the function `git_super_status` is defined, and what variables are available.
+- You may change a number of variables (which name start with `ZSH_THEME_GIT_PROMPT_`) to change the appearance of the prompt.  Take a look in the file `zshrc.sh` to see how the function `git_super_status` is defined, and what variables are available.
+- You may define the variable `$PROMPTCACHE`, which defaults to `~/.prompts`, as another directory where to store the prompt and pid cache files.
 
 **Enjoy!**
 
