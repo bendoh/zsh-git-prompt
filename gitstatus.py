@@ -5,6 +5,7 @@ from __future__ import print_function
 prehash = ':'
 
 from subprocess import Popen, PIPE
+from os import environ
 
 import sys
 gitsym = Popen(['git', 'symbolic-ref', 'HEAD'], stdout=PIPE, stderr=PIPE)
@@ -17,7 +18,7 @@ if 'fatal: Not a git repository' in error_string:
 
 branch = branch.decode("utf-8").strip()[11:]
 
-res, err = Popen(['git','diff','--name-status'], stdout=PIPE, stderr=PIPE).communicate()
+res, err = Popen(['git','diff','--name-status'], stdout=PIPE, stderr=PIPE, env=environ).communicate()
 err_string = err.decode('utf-8')
 if 'fatal' in err_string:
 	sys.exit(0)

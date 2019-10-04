@@ -26,38 +26,74 @@ function TRAPUSR2 {
   rm $PROMPTCACHE/pid.$$
 }
 
+function set_git_dirs {
+  local git_cdup=`git rev-parse --show-cdup 2>/dev/null || echo 'nun'`
+
+  if [[ $git_cdup = "nun" ]]; then
+    GIT_DIR=""
+    GIT_STATUS=""
+  else
+    GIT_DIR="$PWD/$git_cdup/.git"
+    GIT_STATUS="$GIT_DIR/last-status"
+  fi
+}
+
+
 function cached_git_super_status {
+  set_git_dirs
+
+  if [[ -e "$GIT_STATUS" ]]; then
+    load_current_git_vars >$PROMPTCACHE/prompt.$$
+  elif [[ -z $GIT_DIR ]]; then
+    echo "" >$PROMPTCACHE/prompt.$$
+  fi
+
   [ -f $PROMPTCACHE/prompt.$$ ] && cat $PROMPTCACHE/prompt.$$
 }
 
 function async_git_super_status {
   echo $(update_current_git_vars) >$PROMPTCACHE/prompt.$$
+
   kill -s SIGUSR2 $$
 }
 
 function init_async_git_super_status {
   function zle-async-init {
-    [ -f "$PROMPTCACHE/pid.$$" ] && kill $(cat "$PROMPTCACHE/pid.$$")
+    local cachePidFile="$PROMPTCACHE/pid.$$"
+    if [ -f $cachePidFile ]; then
+      local pid=$(cat $cachePidFile)
+      kill $(cat "$PROMPTCACHE/pid.$$") >/dev/null 2>&1
+      rm "$PROMPTCACHE/pid.$$"
+    fi
 
-    (async_git_super_status) &!
-    echo $! >$PROMPTCACHE/pid.$$
+    set_git_dirs
+
+    if [[ ! -z "$GIT_DIR" ]]; then
+      (async_git_super_status) &!
+      echo $! >$PROMPTCACHE/pid.$$
+    fi
   }
 
   zle -N zle-line-init zle-async-init
 }
 
 function update_current_git_vars() {
-  unset __CURRENT_GIT_STATUS
+  local git_statusindex="$GIT_DIR/status-index"
+
+  cp "$GIT_DIR/index" $git_statusindex
 
   if [[ "$GIT_PROMPT_EXECUTABLE" == "python" ]]; then
-      local gitstatus="$__GIT_PROMPT_DIR/gitstatus.py"
-      _GIT_STATUS=`python ${gitstatus} 2>/dev/null`
-  fi
-  if [[ "$GIT_PROMPT_EXECUTABLE" == "haskell" ]]; then
-      _GIT_STATUS=`git status --porcelain --branch &> /dev/null | $__GIT_PROMPT_DIR/src/.bin/gitstatus`
+      GIT_INDEX_FILE=$git_statusindex python "$__GIT_PROMPT_DIR/gitstatus.py" >$GIT_STATUS 2>/dev/null
+  elif [[ "$GIT_PROMPT_EXECUTABLE" == "haskell" ]]; then
+      GIT_INDEX_FILE=$git_statusindex git status --porcelain --branch &> /dev/null | $__GIT_PROMPT_DIR/src/.bin/gitstatus >$GIT_STATUS
   fi
 
-  __CURRENT_GIT_STATUS=("${(@s: :)_GIT_STATUS}")
+  load_current_git_vars
+}
+
+function load_current_git_vars {
+  local _git_status=`cat $GIT_STATUS`
+  __CURRENT_GIT_STATUS=("${(@s: :)_git_status}")
 
   GIT_BRANCH=$__CURRENT_GIT_STATUS[1]
   GIT_AHEAD=$__CURRENT_GIT_STATUS[2]
